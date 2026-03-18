@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔬 Volcano Experiments Lab</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --panel: #111118;
+    --border: #2a2a3a;
+    --accent1: #ff4500;
+    --accent2: #ff8c00;
+    --accent3: #ffd700;
+    --text: #e8e8f0;
+    --muted: #888899;
+    --glow: rgba(255,69,0,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Stars background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      radial-gradient(1px 1px at 10% 15%, rgba(255,200,100,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,150,50,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 25%, rgba(255,200,100,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 80%, rgba(255,100,50,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 90%, rgba(255,200,100,0.2) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    text-align: center;
+    padding: 40px 20px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header .lab-tag {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(28px, 5vw, 56px);
+    font-weight: 900;
+    background: linear-gradient(135deg, #ff4500, #ff8c00, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px 20px 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tab-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .tab-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, #ff4500, #ff8c00);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 0 20px var(--glow);
+  }
+
+  .experiment-panel {
+    display: none;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .experiment-panel.active {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 820px) {
+    .experiment-panel.active {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── CANVAS AREA ── */
+  .sim-wrapper {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .sim-title-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--accent2);
+  }
+
+  .sim-title-bar .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent1);
+    box-shadow: 0 0 8px var(--accent1);
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 800px;
+    background: #050508;
+  }
+
+  .sim-controls {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .erupt-btn {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border: none;
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px var(--glow);
+  }
+
+  .erupt-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 35px var(--glow);
+  }
+
+  .erupt-btn.erupting {
+    background: linear-gradient(135deg, #333, #555);
+    box-shadow: none;
+  }
+
+  .slider-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 80px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent2);
+    cursor: pointer;
+  }
+
+  /* ── INFO PANEL ── */
+  .info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .info-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+
+  .info-card h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .info-card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .formula {
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--accent3);
+    background: rgba(255,215,0,0.07);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent3);
+    margin-top: 8px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 13px;
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { color: var(--muted); }
+  .stat-val {
+    color: var(--accent3);
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .ingredients-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .ingredients-list li {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ingredients-list li::before {
+    content: '▸';
+    color: var(--accent1);
+    font-size: 10px;
+  }
+
+  .warning {
+    background: rgba(255,69,0,0.1);
+    border: 1px solid rgba(255,69,0,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #ff6b3d;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="lab-tag">🔬 Interactive Science Lab</div>
+  <h1>VOLCANO EXPERIMENTS</h1>
+  <p>6 realistic homemade eruption simulations</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('baking')">🌋 Baking Soda</button>
+  <button class="tab-btn" onclick="switchTab('mentos')">💥 Mentos Geyser</button>
+  <button class="tab-btn" onclick="switchTab('elephant')">🐘 Elephant Toothpaste</button>
+  <button class="tab-btn" onclick="switchTab('lava')">💡 Lava Lamp</button>
+  <button class="tab-btn" onclick="switchTab('dryice')">🌫️ Dry Ice Fog</button>
+  <button class="tab-btn" onclick="switchTab('coke')">🥤 Diet Coke Geyser</button>
+</div>
+
+<!-- ════ BAKING SODA ════ -->
+<div class="experiment-panel active" id="panel-baking">
+  <div class="sim-wrapper">
+    <div class="sim-title-bar"><div class="dot"></div> BAKING SODA VOLCANO — LIVE SIMULATION</div>
+    <canvas id="canvas-baking" width="760" height="520"></canvas>
+    <div class="sim-controls">
+      <button class="erupt-btn" id="btn-baking" onclick="erupt('baking')">🌋 ERUPT!</button>
+      <div class="slider-group">Intensity <input type="range" min="1" max="10" value="6" id="intensity-baking"></div>
+      <div class="slider-group">Speed <input type="range" min="1" max="10" value="5" id="speed-baking"></div>
+    </div>
+  </div>
+  <div class="info-panel">
+    <div class="info-card">
+      <h3>⚗️ Science Fact</h3>
+      <p>Baking soda (NaHCO₃) and vinegar (acetic acid) neutralise each other, releasing CO₂ gas that creates thick foam oozing down the volcano sides.</p>
+      <div class="formula">NaHCO₃ + CH₃COOH → CO₂ + H₂O + CH₃COONa</div>
+    </div>
+    <div class="info-card">
+      <h3>📊 Stats</h3>
+      <div class="stat-row"><span class="stat-label">Reaction Type</span><span class="stat-val">ACID-BASE</span></div>
+      <div class="stat-row"><span class="stat-label">Gas Released</span><span class="stat-val">CO₂</span></div>
+      <div class="stat-row"><span class="stat-label">Flow Style</span><span class="stat-val">OOZE DOWN</span></div>
+      <div class="stat-row"><span class="stat-label">Danger Level</span><span class="stat-val">SAFE ✅</span></div>
+    </div>
+    <div class="info-card">
+      <h3>🧪 Ingredients</h3>
+      <ul class="ingredients-list">
+        <li>2 tbsp baking soda</li>
+        <li>½ cup white vinegar</li>
+        <li>A few drops dish soap</li>
+        <li>Food colouring (red/orange)</li>
+        <li>Volcano model / bottle</li>
+      </ul>
+    </div>
+    <div class="warning">⚠️ Always perform real experiments with adult supervision.</div>
+  </div>
+</div>
+
+<!-- ════ MENTOS ════ -->
+<div class="experiment-panel" id="panel-mentos">
+  <div class="sim-wrapper">
+    <div class="sim-title-bar"><div class="dot"></div> MENTOS GEYSER — LIVE SIMULATION</div>
+    <canvas id="canvas-mentos" width="760" height="520"></canvas>
+    <div class="sim-controls">
+      <button class="erupt-btn" id="btn-mentos" onclick="erupt('mentos')">💥 ERUPT!</button>
+      <div class="slider-group">Intensity <input type="range" min="1" max="10" value="8" id="intensity-mentos"></div>
+      <div class="slider-group">Speed <input type="range" min="1" max="10" value="9" id="speed-mentos"></div>
+    </div>
+  </div>
+  <div class="info-panel">
+    <div class="info-card">
+      <h3>⚗️ Science Fact</h3>
+      <p>Mentos candy has thousands of tiny pores. In Diet Coke, these act as nucleation sites for dissolved CO₂, causing an explosive chain reaction geyser.</p>
+      <div class="formula">CO₂(dissolved) → CO₂(gas) [nucleation]</div>
+    </div>
+    <div class="info-card">
+      <h3>📊 Stats</h3>
+      <div class="stat-row"><span class="stat-label">Reaction Type</span><span class="stat-val">PHYSICAL</span></div>
+      <div class="stat-row"><span class="stat-label">Gas Released</span><span class="stat-val">CO₂</span></div>
+      <div class="stat-row"><span class="stat-label">Flow Style</span><span class="stat-val">TALL JET</span></div>
+      <div class="stat-row"><span class="stat-label">Height</span><span class="stat-val">UP TO 9m</span></div>
+    </div>
+    <div class="info-card">
+      <h3>🧪 Ingredients</h3>
+      <ul class="ingredients-list">
+        <li>2L bottle of Diet Coke</li>
+        <li>1 roll of Mentos mints</li>
+        <li>Paper tube (delivery tool)</li>
+        <li>Open outdoor space!</li>
+      </ul>
+    </div>
+    <div class="warning">⚠️ Do this OUTDOORS. Very messy — can spray 6–9 metres high.</div>
+  </div>
+</div>
+
+<!-- ════ ELEPHANT TOOTHPASTE ════ -->
+<div class="experiment-panel" id="panel-elephant">
+  <div class="sim-wrapper">
+    <div class="sim-title-bar"><div class="dot"></div> ELEPHANT TOOTHPASTE — LIVE SIMULATION</div>
+    <canvas id="canvas-elephant" width="760" height="520"></canvas>
+    <div class="sim-controls">
+      <button class="erupt-btn" id="btn-elephant" onclick="erupt('elephant')">🐘 ERUPT!</button>
+      <div class="slider-group">Intensity <input type="range" min="1" max="10" value="7" id="intensity-elephant"></div>
+      <div class="slider-group">Speed <input type="range" min="1" max="10" value="6" id="speed-elephant"></div>
+    </div>
+  </div>
+  <div class="info-panel">
+    <div class="info-card">
+      <h3>⚗️ Science Fact</h3>
+      <p>Hydrogen peroxide rapidly decomposes into water and oxygen gas when catalysed by potassium iodide. The dish soap traps the O₂, creating a giant foam column.</p>
+      <div class="formula">2H₂O₂ → 2H₂O + O₂↑ (KI catalyst)</div>
+    </div>
+    <div class="info-card">
+      <h3>📊 Stats</h3>
+      <div class="stat-row"><span class="stat-label">Reaction Type</span><span class="stat-val">CATALYTIC</span></div>
+      <div class="stat-row"><span class="stat-label">Gas Released</span><span class="stat-val">O₂</span></div>
+      <div class="stat-row"><span class="stat-label">Flow Style</span><span class="stat-val">THICK COLUMN</span></div>
+      <div class="stat-row"><span class="stat-label">Danger Level</span><span class="stat-val">MODERATE ⚠️</span></div>
+    </div>
+    <div class="info-card">
+      <h3>🧪 Ingredients</h3>
+      <ul class="ingredients-list">
+        <li>½ cup 6% hydrogen peroxide</li>
+        <li>1 tsp potassium iodide in water</li>
+        <li>Squirt of dish soap</li>
+        <li>Food colouring</li>
+        <li>Large beaker or bottle</li>
+      </ul>
+    </div>
+    <div class="warning">⚠️ H₂O₂ can burn skin. Wear gloves and goggles. Adult supervision required.</div>
+  </div>
+</div>
+
+<!-- ════ LAVA LAMP ════ -->
+<div class="experiment-panel" id="panel-lava">
+  <div class="sim-wrapper">
+    <div class="sim-title-bar"><div class="dot"></div> LAVA LAMP — LIVE SIMULATION</div>
+    <canvas id="canvas-lava" width="760" height="520"></canvas>
+    <div class="sim-controls">
+      <button class="erupt-btn" id="btn-lava" onclick="erupt('lava')">💡 ACTIVATE!</button>
+      <div class="slider-group">Blobs <input type="range" min="1" max="10" value="5" id="intensity-lava"></div>
+      <div class="slider-group">Speed <input type="range" min="1" max="10" value="4" id="speed-lava"></div>
+    </div>
+  </div>
+  <div class="info-panel">
+    <div class="info-card">
+      <h3>⚗️ Science Fact</h3>
+      <p>Oil and water don't mix (density difference). Alka-Seltzer tablets react with water to produce CO₂ bubbles that carry coloured water droplets up through oil, then release and sink — creating lava lamp motion.</p>
+      <div class="formula">NaHCO₃ + citric acid → CO₂ + H₂O</div>
+    </div>
+    <div class="info-card">
+      <h3>📊 Stats</h3>
+      <div class="stat-row"><span class="stat-label">Reaction Type</span><span class="stat-val">ACID-BASE</span></div>
+      <div class="stat-row"><span class="stat-label">Effect</span><span class="stat-val">BUOYANCY</span></div>
+      <div class="stat-row"><span class="stat-label">Flow Style</span><span class="stat-val">FLOATING BLOBS</span></div>
+      <div class="stat-row"><span class="stat-label">Danger Level</span><span class="stat-val">SAFE ✅</span></div>
+    </div>
+    <div class="info-card">
+      <h3>🧪 Ingredients</h3>
+      <ul class="ingredients-list">
+        <li>Tall glass or jar</li>
+        <li>Baby oil (¾ full)</li>
+        <li>Water + food colouring</li>
+        <li>Alka-Seltzer tablet</li>
+        <li>Flashlight (optional)</li>
+      </ul>
+    </div>
+    <div class="warning">⚠️ Safe experiment! Great for kids with adult guidance.</div>
+  </div>
+</div>
+
+<!-- ════ DRY ICE ════ -->
+<div class="experiment-panel" id="panel-dryice">
+  <div class="sim-wrapper">
+    <div class="sim-title-bar"><div class="dot"></div> DRY ICE FOG — LIVE SIMULATION</div>
+    <canvas id="canvas-dryice" width="760" height="520"></canvas>
+    <div class="sim-controls">
+      <button class="erupt-btn" id="btn-dryice" onclick="erupt('dryice')">🌫️ ACTIVATE!</button>
+      <div class="slider-group">Density <input type="range" min="1" max="10" value="7" id="intensity-dryice"></div>
+      <div class="slider-group">Speed <input type="range" min="1" max="10" value="4" id="speed-dryice"></div>
+    </div>
+  </div>
+  <div class="info-panel">
+    <div class="info-card">
+      <h3>⚗️ Science Fact</h3>
+      <p>Dry ice is solid CO₂ at −78°C. When placed in warm water it sublimates (skips liquid phase) into CO₂ gas. The cold gas condenses surrounding water vapour into a dense, low-rolling white fog.</p>
+      <div class="formula">CO₂(solid) → CO₂(gas) [sublimation]</div>
+    </div>
+    <div class="info-card">
+      <h3>📊 Stats</h3>
+      <div class="stat-row"><span class="stat-label">Reaction Type</span><span class="stat-val">SUBLIMATION</span></div>
+      <div class="stat-row"><span class="stat-label">Temp</span><span class="stat-val">−78°C</span></div>
+      <div class="stat-row"><span class="stat-label">Flow Style</span><span class="stat-val">ROLLING CLOUD</span></div>
+      <div class="stat-row"><span class="stat-label">Danger Level</span><span class="stat-val">CAUTION ⚠️</span></div>
+    </div>
+    <div class="info-card">
+      <h3>🧪 Ingredients</h3>
+      <ul class="ingredients-list">
+        <li>Dry ice pellets (purchased)</li>
+        <li>Bowl of warm water</li>
+        <li>Tongs for handling</li>
+        <li>Gloves (insulated)</li>
+      </ul>
+    </div>
+    <div class="warning">⚠️ NEVER touch dry ice bare-handed — causes frostbite. Ensure ventilation. Adults only for handling dry ice.</div>
+  </div>
+</div>
+
+<!-- ════ DIET COKE GEYSER ════ -->
+<div class="experiment-panel" id="panel-coke">
+  <div class="sim-wrapper">
+    <div class="sim-title-bar"><div class="dot"></div> DIET COKE GEYSER — LIVE SIMULATION</div>
+    <canvas id="canvas-coke" width="760" height="520"></canvas>
+    <div class="sim-controls">
+      <button class="erupt-btn" id="btn-coke" onclick="erupt('coke')">🥤 ERUPT!</button>
+      <div class="slider-group">Pressure <input type="range" min="1" max="10" value="9" id="intensity-coke"></div>
+      <div class="slider-group">Speed <input type="range" min="1" max="10" value="8" id="speed-coke"></div>
+    </div>
+  </div>
+  <div class="info-panel">
+    <div class="info-card">
+      <h3>⚗️ Science Fact</h3>
+      <p>Similar to Mentos, adding table salt or Mentos to Diet Coke with aspartame and CO₂ under pressure causes rapid nucleation. The pressure release launches a powerful continuous jet.</p>
+      <div class="formula">CO₂(aq) + nucleation sites → CO₂(g) jet</div>
+    </div>
+    <div class="info-card">
+      <h3>📊 Stats</h3>
+      <div class="stat-row"><span class="stat-label">Reaction Type</span><span class="stat-val">PHYSICAL</span></div>
+      <div class="stat-row"><span class="stat-label">Gas Released</span><span class="stat-val">CO₂</span></div>
+      <div class="stat-row"><span class="stat-label">Flow Style</span><span class="stat-val">HIGH JET</span></div>
+      <div class="stat-row"><span class="stat-label">Spray Height</span><span class="stat-val">3–6m</span></div>
+    </div>
+    <div class="info-card">
+      <h3>🧪 Ingredients</h3>
+      <ul class="ingredients-list">
+        <li>2L Diet Coke (cold)</li>
+        <li>Mentos or table salt</li>
+        <li>Paper tube delivery method</li>
+        <li>Outdoor space</li>
+      </ul>
+    </div>
+    <div class="warning">⚠️ Do this OUTDOORS. Very sticky — stands 3 to 6 metres back minimum.</div>
+  </div>
+</div>
+
+<script>
+// ── TAB SWITCHING ──
+function switchTab(name) {
+  document.querySelectorAll('.experiment-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  // Resize canvas
+  setTimeout(() => resizeCanvas(name), 50);
+}
+
+function resizeCanvas(name) {
+  const canvas = document.getElementById('canvas-' + name);
+  const wrapper = canvas.parentElement;
+  canvas.width = wrapper.clientWidth;
+  canvas.height = 800;
+  drawScene(name);
+}
+
+// ── PARTICLE SYSTEM ──
+const simStates = {};
+
+function getState(name) {
+  if (!simStates[name]) {
+    simStates[name] = { particles: [], erupting: false, frame: 0, timer: null };
+  }
+  return simStates[name];
+}
+
+function erupt(name) {
+  const state = getState(name);
+  const btn = document.getElementById('btn-' + name);
+  if (state.erupting) {
+    state.erupting = false;
+    state.particles = [];
+    btn.textContent = erupting_labels[name] || '🌋 ERUPT!';
+    btn.classList.remove('erupting');
+    if (state.timer) cancelAnimationFrame(state.timer);
+    drawScene(name);
+    return;
+  }
+  state.erupting = true;
+  state.frame = 0;
+  btn.textContent = '✕ STOP';
+  btn.classList.add('erupting');
+  animate(name);
+}
+
+const erupting_labels = {
+  baking: '🌋 ERUPT!', mentos: '💥 ERUPT!', elephant: '🐘 ERUPT!',
+  lava: '💡 ACTIVATE!', dryice: '🌫️ ACTIVATE!', coke: '🥤 ERUPT!'
+};
+
+// ── DRAWING HELPERS ──
+function drawScene(name) {
+  const canvas = document.getElementById('canvas-' + name);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const drawers = { baking: drawBaking, mentos: drawMentos, elephant: drawElephant, lava: drawLava, dryice: drawDryice, coke: drawCoke };
+  if (drawers[name]) drawers[name](ctx, W, H, getState(name));
+}
+
+function animate(name) {
+  const state = getState(name);
+  if (!state.erupting) return;
+  state.frame++;
+  const intensity = parseInt(document.getElementById('intensity-' + name)?.value || 5);
+  const speed = parseInt(document.getElementById('speed-' + name)?.value || 5);
+  spawnParticles(name, intensity, speed, getState(name));
+  updateParticles(name, getState(name));
+  drawScene(name);
+  state.timer = requestAnimationFrame(() => animate(name));
+}
+
+// ─── BAKING SODA ───
+function drawBaking(ctx, W, H, state) {
+  // Sky gradient
+  const sky = ctx.createLinearGradient(0, 0, 0, H * 0.65);
+  sky.addColorStop(0, '#0a0510');
+  sky.addColorStop(1, '#1a0a05');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // Ground
+  const ground = ctx.createLinearGradient(0, H * 0.65, 0, H);
+  ground.addColorStop(0, '#3d1a00');
+  ground.addColorStop(1, '#1a0800');
+  ctx.fillStyle = ground;
+  ctx.fillRect(0, H * 0.65, W, H * 0.35);
+
+  // Volcano mountain
+  drawVolcano(ctx, W, H, '#7a3010', '#5a2008');
+
+  drawParticlesRich(ctx, state.particles, 'foam');
+}
+
+function drawVolcano(ctx, W, H, col1, col2) {
+  const cx = W / 2, base = H * 0.68, peak = H * 0.25, halfBase = W * 0.3;
+  const grad = ctx.createLinearGradient(cx - halfBase, 0, cx + halfBase, 0);
+  grad.addColorStop(0, col2);
+  grad.addColorStop(0.5, col1);
+  grad.addColorStop(1, col2);
+  ctx.beginPath();
+  ctx.moveTo(cx - halfBase, base);
+  ctx.lineTo(cx - 30, peak);
+  ctx.lineTo(cx + 30, peak);
+  ctx.lineTo(cx + halfBase, base);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Crater rim
+  ctx.beginPath();
+  ctx.ellipse(cx, peak, 35, 10, 0, Math.PI, 0);
+  ctx.fillStyle = '#2a0a00';
+  ctx.fill();
+
+  // Lava glow in crater
+  const glow = ctx.createRadialGradient(cx, peak, 0, cx, peak, 35);
+  glow.addColorStop(0, 'rgba(255,120,0,0.6)');
+  glow.addColorStop(1, 'rgba(255,60,0,0)');
+  ctx.beginPath();
+  ctx.ellipse(cx, peak + 2, 35, 10, 0, 0, Math.PI * 2);
+  ctx.fillStyle = glow;
+  ctx.fill();
+}
+
+function spawnParticles(name, intensity, speed, state) {
+  const canvas = document.getElementById('canvas-' + name);
+  if (!canvas) return;
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2;
+  const spawners = {
+    baking: () => spawnFoam(state, cx, H * 0.25, intensity, speed, W, H),
+    mentos: () => spawnJet(state, cx, H * 0.24, intensity, speed, '#ddeeff', '#ffffff', -22, W),
+    elephant: () => spawnColumn(state, cx, H * 0.2, intensity, speed, W),
+    lava: () => spawnBlobs(state, cx, H * 0.5, intensity, speed, W, H),
+    dryice: () => spawnFog(state, cx, H * 0.5, intensity, speed, W, H),
+    coke: () => spawnJet(state, cx, H * 0.12, intensity, speed, '#c8eeff', '#ffffff', -25, W),
+  };
+  if (spawners[name]) spawners[name]();
+}
+
+function spawnFoam(state, cx, py, intensity, speed, W, H) {
+  const n = Math.floor(intensity * 0.8);
+  for (let i = 0; i < n; i++) {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    state.particles.push({
+      x: cx + (Math.random() - 0.5) * 20,
+      y: py,
+      vx: side * (0.3 + Math.random() * 1.5 * (intensity / 10)),
+      vy: -(0.5 + Math.random() * 2) * (speed / 5),
+      r: 4 + Math.random() * 8,
+      alpha: 0.85,
+      color: `hsl(${15 + Math.random() * 20},100%,${50 + Math.random() * 20}%)`,
+      life: 1, type: 'foam',
+      trail: [],
+    });
+  }
+}
+
+function spawnJet(state, cx, py, intensity, speed, col1, col2, spread, W) {
+  const n = Math.floor(intensity * 1.5);
+  for (let i = 0; i < n; i++) {
+    state.particles.push({
+      x: cx + (Math.random() - 0.5) * 12,
+      y: py,
+      vx: (Math.random() - 0.5) * spread * 0.08,
+      vy: -(10 + Math.random() * 8) * (speed / 6),
+      r: 3 + Math.random() * 5,
+      alpha: 0.9,
+      color: Math.random() < 0.6 ? col1 : col2,
+      life: 1, type: 'jet'
+    });
+  }
+}
+
+function spawnColumn(state, cx, py, intensity, speed, W) {
+  const n = Math.floor(intensity * 1.2);
+  for (let i = 0; i < n; i++) {
+    const hue = Math.random() < 0.5 ? 30 : 50;
+    state.particles.push({
+      x: cx + (Math.random() - 0.5) * 18,
+      y: py,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: -(2 + Math.random() * 3) * (speed / 6),
+      r: 8 + Math.random() * 14,
+      alpha: 0.7,
+      color: `hsl(${hue},90%,60%)`,
+      life: 1, type: 'column'
+    });
+  }
+}
+
+function spawnBlobs(state, cx, cy, intensity, speed, W, H) {
+  if (Math.random() < 0.15 * intensity / 5) {
+    const col = `hsl(${Math.random() * 360},80%,55%)`;
+    const blobCx = W * 0.3 + Math.random() * W * 0.4;
+    state.particles.push({
+      x: blobCx, y: H * 0.78,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -(0.4 + Math.random() * 1.2) * (speed / 6),
+      r: 10 + Math.random() * 18,
+      alpha: 0.8,
+      color: col, life: 1, type: 'blob',
+      sinkY: H * 0.3 + Math.random() * H * 0.25
+    });
+  }
+}
+
+function spawnFog(state, cx, cy, intensity, speed, W, H) {
+  const n = Math.floor(intensity * 1.0);
+  for (let i = 0; i < n; i++) {
+    state.particles.push({
+      x: cx + (Math.random() - 0.5) * 60,
+      y: H * 0.55,
+      vx: (Math.random() - 0.5) * 1.5 * (speed / 5),
+      vy: 0.2 + Math.random() * 0.3,
+      r: 20 + Math.random() * 40,
+      alpha: 0.18 + Math.random() * 0.12,
+      color: `rgba(200,220,255,1)`,
+      life: 1, type: 'fog'
+    });
+  }
+}
+
+function updateParticles(name, state) {
+  const canvas = document.getElementById('canvas-' + name);
+  if (!canvas) return;
+  const W = canvas.width, H = canvas.height;
+
+  state.particles = state.particles.filter(p => p.alpha > 0.01 && p.y > -50 && p.y < H + 50);
+
+  state.particles.forEach(p => {
+    switch (p.type) {
+      case 'foam':
+        if (!p.trail) p.trail = [];
+        p.trail.push({x: p.x, y: p.y});
+        if (p.trail.length > 16) p.trail.shift();
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.05; // gravity
+        p.vx *= 0.99;
+        p.alpha -= 0.008;
+        p.r += 0.1;
+        break;
+      case 'jet':
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.12;
+        p.alpha -= 0.015;
+        // keep vx/vy live for motion-streak renderer
+        break;
+      case 'column':
+        p.x += p.vx; p.y += p.vy;
+        p.vy *= 0.98;
+        p.vx *= 0.97;
+        p.r += 0.3;
+        p.alpha -= 0.007;
+        break;
+      case 'blob':
+        p.x += p.vx; p.y += p.vy;
+        if (p.y <= p.sinkY) p.vy = 0.5; // start sinking
+        if (p.y > H * 0.76) p.alpha -= 0.05;
+        break;
+      case 'fog':
+        p.x += p.vx; p.y += p.vy;
+        p.r += 0.5;
+        p.alpha -= 0.002;
+        break;
+    }
+  });
+
+  // Cap particles
+  if (state.particles.length > 800) state.particles.splice(0, 100);
+}
+
+// ─── MENTOS ───
+function drawMentos(ctx, W, H, state) {
+  // Night sky
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#020812');
+  sky.addColorStop(0.6, '#050f20');
+  sky.addColorStop(1, '#0a1a0a');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grass ground
+  ctx.fillStyle = '#0d2d0d';
+  ctx.fillRect(0, H * 0.85, W, H * 0.15);
+  ctx.fillStyle = '#164016';
+  ctx.fillRect(0, H * 0.85, W, 6);
+
+  // Coke bottle
+  drawCokeBottle(ctx, W / 2, H * 0.85, H * 0.52, '#1a3a1a', '#2a5a2a', '#cce8cc', 'Diet\nCoke');
+
+  drawParticlesRich(ctx, state.particles, 'jet');
+}
+
+function drawCokeBottle(ctx, cx, baseY, height, col1, col2, labelCol, labelText) {
+  const bw = 55, capH = 22;
+  const top = baseY - height;
+  // body
+  const bg = ctx.createLinearGradient(cx - bw / 2, 0, cx + bw / 2, 0);
+  bg.addColorStop(0, col1);
+  bg.addColorStop(0.4, col2);
+  bg.addColorStop(0.7, col1);
+  ctx.beginPath();
+  ctx.roundRect(cx - bw / 2, top, bw, height, [8, 8, 0, 0]);
+  ctx.fillStyle = bg;
+  ctx.fill();
+
+  // label
+  ctx.fillStyle = labelCol;
+  ctx.globalAlpha = 0.15;
+  ctx.fillRect(cx - bw / 2 + 4, top + height * 0.3, bw - 8, height * 0.3);
+  ctx.globalAlpha = 1;
+
+  // cap
+  ctx.beginPath();
+  ctx.roundRect(cx - 16, top - capH, 32, capH, 4);
+  ctx.fillStyle = '#e00';
+  ctx.fill();
+
+  // opening
+  ctx.beginPath();
+  ctx.ellipse(cx, top - capH, 8, 4, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#600';
+  ctx.fill();
+}
+
+// ─── ELEPHANT TOOTHPASTE ───
+function drawElephant(ctx, W, H, state) {
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#0d0510');
+  sky.addColorStop(1, '#08020e');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // Lab bench
+  ctx.fillStyle = '#1a1230';
+  ctx.fillRect(0, H * 0.72, W, H * 0.28);
+  ctx.fillStyle = '#2a1a40';
+  ctx.fillRect(0, H * 0.72, W, 6);
+
+  // Beaker
+  drawBeaker(ctx, W / 2, H * 0.72, H * 0.42);
+
+  drawParticlesRich(ctx, state.particles, 'column');
+}
+
+function drawBeaker(ctx, cx, baseY, height) {
+  const bw = 80, top = baseY - height;
+  // glass body
+  ctx.beginPath();
+  ctx.moveTo(cx - bw / 2 + 10, top);
+  ctx.lineTo(cx - bw / 2, baseY);
+  ctx.lineTo(cx + bw / 2, baseY);
+  ctx.lineTo(cx + bw / 2 - 10, top);
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(180,180,255,0.4)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(80,60,180,0.15)';
+  ctx.fill();
+
+  // liquid inside
+  ctx.beginPath();
+  ctx.moveTo(cx - bw / 2 + 12, top + height * 0.5);
+  ctx.lineTo(cx - bw / 2 + 4, baseY - 2);
+  ctx.lineTo(cx + bw / 2 - 4, baseY - 2);
+  ctx.lineTo(cx + bw / 2 - 12, top + height * 0.5);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(120,80,255,0.35)';
+  ctx.fill();
+
+  // spout
+  ctx.beginPath();
+  ctx.rect(cx - 6, top - 12, 12, 14);
+  ctx.fillStyle = 'rgba(180,180,255,0.3)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(180,180,255,0.4)';
+  ctx.stroke();
+}
+
+// ─── LAVA LAMP ───
+function drawLava(ctx, W, H, state) {
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#0a0008');
+  bg.addColorStop(1, '#050010');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Lamp container
+  const cx = W / 2, lh = H * 0.7, lw = 120, ly = H * 0.13;
+  // glass
+  ctx.beginPath();
+  ctx.moveTo(cx - lw / 2 + 15, ly);
+  ctx.lineTo(cx - lw / 2, ly + lh);
+  ctx.lineTo(cx + lw / 2, ly + lh);
+  ctx.lineTo(cx + lw / 2 - 15, ly);
+  ctx.closePath();
+  const glassGrad = ctx.createLinearGradient(cx - lw / 2, 0, cx + lw / 2, 0);
+  glassGrad.addColorStop(0, 'rgba(100,80,200,0.12)');
+  glassGrad.addColorStop(0.5, 'rgba(150,120,255,0.22)');
+  glassGrad.addColorStop(1, 'rgba(100,80,200,0.12)');
+  ctx.fillStyle = glassGrad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(160,140,255,0.35)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // oil fill
+  ctx.beginPath();
+  ctx.moveTo(cx - lw / 2 + 16, ly + 2);
+  ctx.lineTo(cx - lw / 2 + 2, ly + lh - 2);
+  ctx.lineTo(cx + lw / 2 - 2, ly + lh - 2);
+  ctx.lineTo(cx + lw / 2 - 16, ly + 2);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255,200,50,0.06)';
+  ctx.fill();
+
+  // base glow
+  const glow = ctx.createRadialGradient(cx, ly + lh + 8, 0, cx, ly + lh + 8, 60);
+  glow.addColorStop(0, 'rgba(255,200,50,0.5)');
+  glow.addColorStop(1, 'rgba(255,150,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(cx - 80, ly + lh, 160, 30);
+
+  drawParticlesRich(ctx, state.particles, 'blob');
+}
+
+// ─── DRY ICE ───
+function drawDryice(ctx, W, H, state) {
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#060810');
+  bg.addColorStop(1, '#0d1018');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Table
+  ctx.fillStyle = '#1a1c22';
+  ctx.fillRect(0, H * 0.7, W, H * 0.3);
+  ctx.fillStyle = '#2a2c32';
+  ctx.fillRect(0, H * 0.7, W, 5);
+
+  // Cauldron
+  const cx = W / 2, cy = H * 0.7, cr = 100, cd = 55;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - cd * 0.3, cr, 18, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#666';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx - cr, cy - cd * 0.3);
+  ctx.quadraticCurveTo(cx - cr - 10, cy + cd * 0.5, cx, cy + cd * 0.7);
+  ctx.quadraticCurveTo(cx + cr + 10, cy + cd * 0.5, cx + cr, cy - cd * 0.3);
+  ctx.closePath();
+  const caldGrad = ctx.createLinearGradient(cx - cr, 0, cx + cr, 0);
+  caldGrad.addColorStop(0, '#333');
+  caldGrad.addColorStop(0.5, '#555');
+  caldGrad.addColorStop(1, '#2a2a2a');
+  ctx.fillStyle = caldGrad;
+  ctx.fill();
+
+  // Water inside
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - cd * 0.3, cr - 8, 15, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(100,150,255,0.3)';
+  ctx.fill();
+
+  // Dry ice block
+  ctx.beginPath();
+  ctx.roundRect(cx - 22, cy - cd * 0.6, 44, 28, 4);
+  ctx.fillStyle = 'rgba(200,220,255,0.55)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(220,240,255,0.8)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  drawParticlesRich(ctx, state.particles, 'fog');
+}
+
+// ─── DIET COKE ───
+function drawCoke(ctx, W, H, state) {
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#060408');
+  sky.addColorStop(0.7, '#100818');
+  sky.addColorStop(1, '#080510');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  // Ground
+  ctx.fillStyle = '#100c04';
+  ctx.fillRect(0, H * 0.8, W, H * 0.2);
+  ctx.fillStyle = '#1e1808';
+  ctx.fillRect(0, H * 0.8, W, 5);
+
+  // Bottle — tall, slim
+  drawCokeBottle(ctx, W / 2, H * 0.8, H * 0.68, '#1a0820', '#2a1040', '#ddaaff', 'Diet\nCoke');
+
+  drawParticlesRich(ctx, state.particles, 'jet');
+}
+
+// ══════════════════════════════════════════════════
+// RICH PARTICLE TEXTURE RENDERER
+// Draws realistic liquid/foam/fog textures for all
+// experiment types. expType hints which style to use
+// when particles don't carry a .type themselves.
+// ══════════════════════════════════════════════════
+function drawParticlesRich(ctx, particles, expType) {
+
+  // ── OOZE trails first (under blobs) ──
+  if (expType === 'foam') {
+    particles.forEach(p => {
+      if (p.alpha <= 0 || !p.trail || p.trail.length < 2) return;
+      ctx.save();
+      for (let i = 1; i < p.trail.length; i++) {
+        const t = i / p.trail.length;
+        const w = p.r * (0.35 + t * 0.55);
+        ctx.globalAlpha = Math.max(0, p.alpha * t * 0.65);
+        // Parse hsl color for trail darkening
+        const hue = parseInt((p.color.match(/hsl\((\d+)/) || [0, 20])[1]);
+        const light = Math.round(30 * t);
+        ctx.strokeStyle = `hsl(${hue},100%,${light}%)`;
+        ctx.lineWidth = w;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(p.trail[i - 1].x, p.trail[i - 1].y);
+        ctx.lineTo(p.trail[i].x, p.trail[i].y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
+  particles.forEach(p => {
+    if (p.alpha <= 0) return;
+    ctx.save();
+    const s = p.r;
+    const lx = p.x - s * 0.28, ly = p.y - s * 0.28;
+
+    // ── FOAM / OOZE ──
+    if (expType === 'foam') {
+      // Parse base colour
+      const hue = parseInt((p.color.match(/hsl\((\d+)/) || [0, 20])[1]);
+      const r = Math.round(255 * Math.max(0, Math.min(1, 0.5 + Math.cos((hue - 30) * Math.PI / 180) * 0.5)));
+      const g = Math.round(160 * Math.max(0, Math.min(1, 0.4 + Math.sin(hue * Math.PI / 180) * 0.4)));
+
+      // Dark cooling crust ring
+      ctx.globalAlpha = Math.max(0, p.alpha * 0.9);
+      const crust = ctx.createRadialGradient(p.x, p.y, s * 0.52, p.x, p.y, s);
+      crust.addColorStop(0, 'transparent');
+      crust.addColorStop(0.6, `rgba(${Math.round(r * 0.4)},${Math.round(g * 0.15)},0,0.7)`);
+      crust.addColorStop(1, 'rgba(10,4,0,0.85)');
+      ctx.fillStyle = crust;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+
+      // Molten core
+      const core = ctx.createRadialGradient(lx, ly, 0, p.x, p.y, s * 0.72);
+      ctx.globalAlpha = Math.max(0, p.alpha * 0.95);
+      core.addColorStop(0,    `rgba(255,245,180,${p.alpha * 0.98})`);
+      core.addColorStop(0.22, `rgba(255,200,60,${p.alpha * 0.95})`);
+      core.addColorStop(0.55, `rgba(${r},${g},0,${p.alpha * 0.9})`);
+      core.addColorStop(1,   'transparent');
+      ctx.fillStyle = core;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s * 0.72, 0, Math.PI * 2); ctx.fill();
+
+      // Specular highlight
+      ctx.globalAlpha = p.alpha * 0.55;
+      const spec = ctx.createRadialGradient(lx, ly, 0, lx, ly, s * 0.38);
+      spec.addColorStop(0, 'rgba(255,255,240,0.9)');
+      spec.addColorStop(1, 'transparent');
+      ctx.fillStyle = spec;
+      ctx.beginPath(); ctx.arc(lx, ly, s * 0.38, 0, Math.PI * 2); ctx.fill();
+
+      // Foam edge bubbles
+      if (s > 6) {
+        ctx.globalAlpha = p.alpha * 0.45;
+        for (let b = 0; b < 3; b++) {
+          const ba = b * 2.1 + p.x * 0.05;
+          const bx = p.x + Math.cos(ba) * s * 0.68;
+          const by = p.y + Math.sin(ba) * s * 0.48;
+          const br = s * 0.13;
+          const bg = ctx.createRadialGradient(bx - br * 0.4, by - br * 0.4, 0, bx, by, br);
+          bg.addColorStop(0, 'rgba(255,250,220,0.95)');
+          bg.addColorStop(0.5, 'rgba(255,230,160,0.6)');
+          bg.addColorStop(1, 'transparent');
+          ctx.fillStyle = bg;
+          ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+
+    // ── JET (mentos / coke geyser) ──
+    else if (expType === 'jet') {
+      const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
+      const len = Math.min(speed * 3.5, s * 3.8);
+      const nx = p.vx / speed, ny = p.vy / speed;
+
+      // Motion streak
+      ctx.globalAlpha = p.alpha * 0.38;
+      const streak = ctx.createLinearGradient(
+        p.x - nx * len, p.y - ny * len, p.x, p.y
+      );
+      streak.addColorStop(0, 'transparent');
+      streak.addColorStop(0.5, 'rgba(180,230,255,0.6)');
+      streak.addColorStop(1, 'rgba(255,255,255,0.85)');
+      ctx.strokeStyle = streak;
+      ctx.lineWidth = s * 0.7;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(p.x - nx * len, p.y - ny * len);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+
+      // Droplet with refraction layers
+      ctx.globalAlpha = p.alpha * 0.95;
+      const drop = ctx.createRadialGradient(lx, ly, 0, p.x, p.y, s);
+      drop.addColorStop(0,    'rgba(255,255,255,0.98)');
+      drop.addColorStop(0.18, 'rgba(220,245,255,0.92)');
+      drop.addColorStop(0.5,  'rgba(150,215,255,0.75)');
+      drop.addColorStop(0.8,  'rgba(100,185,245,0.3)');
+      drop.addColorStop(1,   'transparent');
+      ctx.fillStyle = drop;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+
+      // Caustic shimmer
+      ctx.globalAlpha = p.alpha * 0.4;
+      const caus = ctx.createRadialGradient(
+        lx * 0.7 + p.x * 0.3, ly * 0.7 + p.y * 0.3, 0,
+        p.x, p.y, s * 0.55
+      );
+      caus.addColorStop(0, 'rgba(200,240,255,0.8)');
+      caus.addColorStop(1, 'transparent');
+      ctx.fillStyle = caus;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s * 0.55, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── COLUMN (elephant toothpaste) ──
+    else if (expType === 'column') {
+      // Parse hsl for rgb components
+      const hue = parseInt((p.color.match(/hsl\((\d+)/) || [0, 30])[1]);
+      const cr = Math.round(255 * Math.max(0, Math.cos((hue) * Math.PI / 180) * 0.5 + 0.5));
+      const cg = Math.round(255 * Math.max(0, Math.sin((hue + 90) * Math.PI / 360) * 0.8));
+      const cb = Math.round(100 * Math.max(0, Math.cos((hue - 120) * Math.PI / 180) * 0.4 + 0.3));
+
+      // Dense foam body
+      ctx.globalAlpha = p.alpha * 0.92;
+      const body = ctx.createRadialGradient(lx, ly, 0, p.x, p.y, s);
+      body.addColorStop(0,    'rgba(255,255,255,1.0)');
+      body.addColorStop(0.25, `rgba(${cr},${cg},${cb},0.95)`);
+      body.addColorStop(0.6,  `rgba(${Math.round(cr*0.75)},${Math.round(cg*0.85)},${Math.round(cb*0.75)},0.8)`);
+      body.addColorStop(1,   'transparent');
+      ctx.fillStyle = body;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+
+      // Surface foam cells (toothpaste texture)
+      ctx.globalAlpha = p.alpha * 0.5;
+      for (let b = 0; b < 5; b++) {
+        const ba = b * 1.257 + p.y * 0.04;
+        const bx = p.x + Math.cos(ba) * s * 0.52;
+        const by = p.y + Math.sin(ba) * s * 0.45;
+        const br = s * (0.12 + Math.sin(b * 2.3) * 0.05);
+        const bg = ctx.createRadialGradient(bx - br * 0.35, by - br * 0.35, 0, bx, by, br);
+        bg.addColorStop(0, 'rgba(255,255,255,0.95)');
+        bg.addColorStop(0.6, 'rgba(255,255,255,0.3)');
+        bg.addColorStop(1, 'transparent');
+        ctx.fillStyle = bg;
+        ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Specular dot
+      ctx.globalAlpha = p.alpha * 0.7;
+      const spec = ctx.createRadialGradient(lx, ly, 0, lx, ly, s * 0.3);
+      spec.addColorStop(0, 'rgba(255,255,255,1)');
+      spec.addColorStop(1, 'transparent');
+      ctx.fillStyle = spec;
+      ctx.beginPath(); ctx.arc(lx, ly, s * 0.3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── BLOB (lava lamp) ──
+    else if (expType === 'blob') {
+      // Parse hsl
+      const hue = parseInt((p.color.match(/hsl\((\d+)/) || [0, 300])[1]);
+      const toRgb = (h, s2, l) => {
+        const a = s2 * Math.min(l, 1 - l);
+        const f = n => { const k = (n + h / 30) % 12; return l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1); };
+        return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+      };
+      const [r2, g2, b2] = toRgb(hue, 0.8, 0.55);
+      const [rd, gd, bd] = [Math.round(r2*0.6), Math.round(g2*0.3), Math.round(b2*0.55)];
+
+      // Outer surface with rim light
+      ctx.globalAlpha = p.alpha * 0.88;
+      const outer = ctx.createRadialGradient(p.x, p.y, s * 0.3, p.x, p.y, s);
+      outer.addColorStop(0,    `rgba(${r2},${g2},${b2},0.0)`);
+      outer.addColorStop(0.55, `rgba(${r2},${g2},${b2},0.6)`);
+      outer.addColorStop(0.82, `rgba(${rd},${gd},${bd},0.9)`);
+      outer.addColorStop(1,   `rgba(${Math.round(r2*0.3)},0,${Math.round(b2*0.3)},0.5)`);
+      ctx.fillStyle = outer;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+
+      // Translucent inner body
+      ctx.globalAlpha = p.alpha * 0.82;
+      const inner = ctx.createRadialGradient(lx, ly, 0, p.x, p.y, s * 0.8);
+      inner.addColorStop(0,   'rgba(255,240,255,0.6)');
+      inner.addColorStop(0.3, `rgba(${r2},${g2},${b2},0.75)`);
+      inner.addColorStop(0.7, `rgba(${rd},${Math.round(gd*0.2)},${bd},0.55)`);
+      inner.addColorStop(1,  'transparent');
+      ctx.fillStyle = inner;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s * 0.8, 0, Math.PI * 2); ctx.fill();
+
+      // Rim glow (back-lit)
+      ctx.globalAlpha = p.alpha * 0.5;
+      const rim = ctx.createRadialGradient(p.x + s * 0.25, p.y + s * 0.25, s * 0.6, p.x, p.y, s * 1.05);
+      rim.addColorStop(0,   'transparent');
+      rim.addColorStop(0.7, `rgba(${r2},${g2},${b2},0.0)`);
+      rim.addColorStop(1,   'rgba(255,220,255,0.55)');
+      ctx.fillStyle = rim;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s * 1.05, 0, Math.PI * 2); ctx.fill();
+
+      // Primary specular
+      ctx.globalAlpha = p.alpha * 0.8;
+      const spec = ctx.createRadialGradient(lx, ly, 0, lx, ly, s * 0.28);
+      spec.addColorStop(0, 'rgba(255,255,255,0.95)');
+      spec.addColorStop(0.6, 'rgba(255,255,255,0.3)');
+      spec.addColorStop(1, 'transparent');
+      ctx.fillStyle = spec;
+      ctx.beginPath(); ctx.arc(lx, ly, s * 0.28, 0, Math.PI * 2); ctx.fill();
+
+      // Secondary specular
+      ctx.globalAlpha = p.alpha * 0.45;
+      const spec2 = ctx.createRadialGradient(lx + s*0.25, ly + s*0.18, 0, lx + s*0.25, ly + s*0.18, s * 0.1);
+      spec2.addColorStop(0, 'rgba(255,255,255,0.75)');
+      spec2.addColorStop(1, 'transparent');
+      ctx.fillStyle = spec2;
+      ctx.beginPath(); ctx.arc(lx + s*0.25, ly + s*0.18, s * 0.1, 0, Math.PI * 2); ctx.fill();
+
+      // CO₂ micro-bubble inside
+      ctx.globalAlpha = p.alpha * 0.38;
+      const bx2 = p.x + s*0.18, by2 = p.y - s*0.3, br2 = s * 0.1;
+      const mbg = ctx.createRadialGradient(bx2 - br2*0.3, by2 - br2*0.3, 0, bx2, by2, br2);
+      mbg.addColorStop(0, 'rgba(255,255,255,0.9)');
+      mbg.addColorStop(1, 'transparent');
+      ctx.fillStyle = mbg;
+      ctx.beginPath(); ctx.arc(bx2, by2, br2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // ── FOG (dry ice) ──
+    else if (expType === 'fog') {
+      // Dense inner core
+      ctx.globalAlpha = p.alpha * 0.55;
+      const inner = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s * 0.4);
+      inner.addColorStop(0, 'rgba(235,245,255,0.5)');
+      inner.addColorStop(1, 'transparent');
+      ctx.fillStyle = inner;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s * 0.4, 0, Math.PI * 2); ctx.fill();
+
+      // Mid wisp
+      ctx.globalAlpha = p.alpha * 0.35;
+      const mid = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s * 0.75);
+      mid.addColorStop(0,    'rgba(220,238,255,0.32)');
+      mid.addColorStop(0.55, 'rgba(200,225,255,0.14)');
+      mid.addColorStop(1,   'transparent');
+      ctx.fillStyle = mid;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s * 0.75, 0, Math.PI * 2); ctx.fill();
+
+      // Outer haze
+      ctx.globalAlpha = p.alpha * 0.2;
+      const outer = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s);
+      outer.addColorStop(0,    'rgba(200,220,255,0.15)');
+      outer.addColorStop(0.65, 'rgba(180,210,255,0.06)');
+      outer.addColorStop(1,   'transparent');
+      ctx.fillStyle = outer;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+    }
+
+    ctx.restore();
+  });
+}
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  ['baking', 'mentos', 'elephant', 'lava', 'dryice', 'coke'].forEach(name => {
+    resizeCanvas(name);
+  });
+});
+
+window.addEventListener('resize', () => {
+  ['baking', 'mentos', 'elephant', 'lava', 'dryice', 'coke'].forEach(name => {
+    const panel = document.getElementById('panel-' + name);
+    if (panel && panel.classList.contains('active')) resizeCanvas(name);
+  });
+});
+</script>
+</body>
+</html>
