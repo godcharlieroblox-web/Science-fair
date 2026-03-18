@@ -169,7 +169,7 @@
   canvas {
     display: block;
     width: 100%;
-    height: 800px;
+    height: 520px;
     background: #050508;
   }
 
@@ -581,7 +581,7 @@ function resizeCanvas(name) {
   const canvas = document.getElementById('canvas-' + name);
   const wrapper = canvas.parentElement;
   canvas.width = wrapper.clientWidth;
-  canvas.height = 800;
+  canvas.height = 520;
   drawScene(name);
 }
 
@@ -655,7 +655,7 @@ function drawBaking(ctx, W, H, state) {
   // Ground
   const ground = ctx.createLinearGradient(0, H * 0.65, 0, H);
   ground.addColorStop(0, '#3d1a00');
-  ground.addColorStop(1, '#1a0800');
+  ground.addColorStop(1, '#1a0520');
   ctx.fillStyle = ground;
   ctx.fillRect(0, H * 0.65, W, H * 0.35);
 
@@ -845,7 +845,7 @@ function updateParticles(name, state) {
   });
 
   // Cap particles
-  if (state.particles.length > 800) state.particles.splice(0, 100);
+  if (state.particles.length > 520) state.particles.splice(0, 100);
 }
 
 // ─── MENTOS ───
