@@ -169,7 +169,7 @@
   canvas {
     display: block;
     width: 100%;
-    height: 520px;
+    height: 1000px;
     background: #050508;
   }
 
@@ -345,7 +345,7 @@
 <div class="experiment-panel active" id="panel-baking">
   <div class="sim-wrapper">
     <div class="sim-title-bar"><div class="dot"></div> BAKING SODA VOLCANO — LIVE SIMULATION</div>
-    <canvas id="canvas-baking" width="760" height="520"></canvas>
+    <canvas id="canvas-baking" width="760" height="1000"></canvas>
     <div class="sim-controls">
       <button class="erupt-btn" id="btn-baking" onclick="erupt('baking')">🌋 ERUPT!</button>
       <div class="slider-group">Intensity <input type="range" min="1" max="10" value="6" id="intensity-baking"></div>
@@ -383,7 +383,7 @@
 <div class="experiment-panel" id="panel-mentos">
   <div class="sim-wrapper">
     <div class="sim-title-bar"><div class="dot"></div> MENTOS GEYSER — LIVE SIMULATION</div>
-    <canvas id="canvas-mentos" width="760" height="520"></canvas>
+    <canvas id="canvas-mentos" width="760" height="1000"></canvas>
     <div class="sim-controls">
       <button class="erupt-btn" id="btn-mentos" onclick="erupt('mentos')">💥 ERUPT!</button>
       <div class="slider-group">Intensity <input type="range" min="1" max="10" value="8" id="intensity-mentos"></div>
@@ -420,7 +420,7 @@
 <div class="experiment-panel" id="panel-elephant">
   <div class="sim-wrapper">
     <div class="sim-title-bar"><div class="dot"></div> ELEPHANT TOOTHPASTE — LIVE SIMULATION</div>
-    <canvas id="canvas-elephant" width="760" height="520"></canvas>
+    <canvas id="canvas-elephant" width="760" height="1000"></canvas>
     <div class="sim-controls">
       <button class="erupt-btn" id="btn-elephant" onclick="erupt('elephant')">🐘 ERUPT!</button>
       <div class="slider-group">Intensity <input type="range" min="1" max="10" value="7" id="intensity-elephant"></div>
@@ -458,7 +458,7 @@
 <div class="experiment-panel" id="panel-lava">
   <div class="sim-wrapper">
     <div class="sim-title-bar"><div class="dot"></div> LAVA LAMP — LIVE SIMULATION</div>
-    <canvas id="canvas-lava" width="760" height="520"></canvas>
+    <canvas id="canvas-lava" width="760" height="1000"></canvas>
     <div class="sim-controls">
       <button class="erupt-btn" id="btn-lava" onclick="erupt('lava')">💡 ACTIVATE!</button>
       <div class="slider-group">Blobs <input type="range" min="1" max="10" value="5" id="intensity-lava"></div>
@@ -496,7 +496,7 @@
 <div class="experiment-panel" id="panel-dryice">
   <div class="sim-wrapper">
     <div class="sim-title-bar"><div class="dot"></div> DRY ICE FOG — LIVE SIMULATION</div>
-    <canvas id="canvas-dryice" width="760" height="520"></canvas>
+    <canvas id="canvas-dryice" width="760" height="1000"></canvas>
     <div class="sim-controls">
       <button class="erupt-btn" id="btn-dryice" onclick="erupt('dryice')">🌫️ ACTIVATE!</button>
       <div class="slider-group">Density <input type="range" min="1" max="10" value="7" id="intensity-dryice"></div>
@@ -533,7 +533,7 @@
 <div class="experiment-panel" id="panel-coke">
   <div class="sim-wrapper">
     <div class="sim-title-bar"><div class="dot"></div> DIET COKE GEYSER — LIVE SIMULATION</div>
-    <canvas id="canvas-coke" width="760" height="520"></canvas>
+    <canvas id="canvas-coke" width="760" height="1000"></canvas>
     <div class="sim-controls">
       <button class="erupt-btn" id="btn-coke" onclick="erupt('coke')">🥤 ERUPT!</button>
       <div class="slider-group">Pressure <input type="range" min="1" max="10" value="9" id="intensity-coke"></div>
@@ -581,7 +581,7 @@ function resizeCanvas(name) {
   const canvas = document.getElementById('canvas-' + name);
   const wrapper = canvas.parentElement;
   canvas.width = wrapper.clientWidth;
-  canvas.height = 520;
+  canvas.height = 1000;
   drawScene(name);
 }
 
